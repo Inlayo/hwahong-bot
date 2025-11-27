@@ -1,0 +1,13 @@
+{
+  "name": "discord-hwahong-bot",
+  "version": "1.0.0",
+  "description": "Discord bot that gives auto-role on join and sends timetable & lunch using NEIS API.",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "discord.js": "^14.11.0",
+    "dotenv": "^16.4.1",
+    "node-fetch": "^3.3.2",
+    "node-schedule": "^2.1.1"
+  }
+}
