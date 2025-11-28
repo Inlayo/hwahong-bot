@@ -148,7 +148,7 @@ async function getLunch() {
   }
 }
 
-schedule.scheduleJob("30 8 * * 1-5", async () => {
+schedule.scheduleJob("30 23 * * 0-4", async () => {
   const channel = await client.channels.fetch(TIMETABLE_CHANNEL);
   if (!channel) return console.log("⚠ Target channel not found");
 
