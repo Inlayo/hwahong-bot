@@ -103,7 +103,7 @@ async function getTimetable() {
         if (weekday === 0 || weekday === 6) return null;
         const key = `${weekday}${p.PERIO}`;
         if (seletetimeMap[key]) {
-          return `${p.PERIO}교시: 선택${seletetimeMap[key]}`;
+          return `${p.PERIO}교시: 선택 ${seletetimeMap[key]}`;
         }
         return `${p.PERIO}교시: ${p.ITRT_CNTNT}`;
       })
