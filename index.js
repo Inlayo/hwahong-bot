@@ -22,7 +22,7 @@ client.on("guildMemberAdd", async (member) => {
     const role = member.guild.roles.cache.get(ROLE_TO_GIVE);
     if (role) {
       await member.roles.add(role);
-      console.log(`> Role assigned automatically: ${member.user.tag}`);
+      console.log(`Role assigned automatically: ${member.user.tag}`);
     }
   } catch (err) {
     console.log("Error assigning role:", err);
