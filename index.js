@@ -157,7 +157,7 @@ schedule.scheduleJob("0 23 * * 0-4", async () => {
 
 client.once("clientReady", () => {
   console.log(`Logged in as ${client.user.tag}`);
-  client.user.setActivity("맛있다", { type: 0 });
+  client.user.setActivity("승현이 맛있겠다", { type: 0 });
 });
 
 client.login(process.env.TOKEN);
