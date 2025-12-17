@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import fetch from "node-fetch";
 import schedule from "node-schedule";
-import { Client, GatewayIntentBits, EmbedBuilder } from "discord.js";
+import { Client, GatewayIntentBits, EmbedBuilder, REST, Routes } from "discord.js";
 
 dotenv.config();
 
@@ -32,11 +32,79 @@ client.on("guildMemberAdd", async (member) => {
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
-  if (message.content === "!test") {
+  if (message.content === "!alert") {
     const channel = await client.channels.fetch(TIMETABLE_CHANNEL);
     if (!channel) return console.log("⚠ Target channel not found");
 
     await sendTimetableAndLunch(channel);
+  }
+});
+
+// 슬래시 명령어 처리
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const { commandName } = interaction;
+
+  try {
+    if (commandName === "오늘의_급식") {
+      const lunch = await getLunchForDate(0);
+      const embed = new EmbedBuilder()
+        .setColor("#4a90e2")
+        .setTitle("🍱 오늘의 급식")
+        .setDescription(lunch || "급식 정보 없음")
+        .setTimestamp()
+        .setFooter({ text: "급식 알리미" });
+      await interaction.reply({ embeds: [embed] });
+    } else if (commandName === "내일의_급식") {
+      const lunch = await getLunchForDate(1);
+      const embed = new EmbedBuilder()
+        .setColor("#4a90e2")
+        .setTitle("🍱 내일의 급식")
+        .setDescription(lunch || "급식 정보 없음")
+        .setTimestamp()
+        .setFooter({ text: "급식 알리미" });
+      await interaction.reply({ embeds: [embed] });
+    } else if (commandName === "어제의_급식") {
+      const lunch = await getLunchForDate(-1);
+      const embed = new EmbedBuilder()
+        .setColor("#4a90e2")
+        .setTitle("🍱 어제의 급식")
+        .setDescription(lunch || "급식 정보 없음")
+        .setTimestamp()
+        .setFooter({ text: "급식 알리미" });
+      await interaction.reply({ embeds: [embed] });
+    } else if (commandName === "오늘의_시간표") {
+      const timetable = await getTimetableForDate(0);
+      const embed = new EmbedBuilder()
+        .setColor("#4a90e2")
+        .setTitle("⏰ 오늘의 시간표")
+        .setDescription(timetable || "시간표 정보 없음")
+        .setTimestamp()
+        .setFooter({ text: "시간표 알리미" });
+      await interaction.reply({ embeds: [embed] });
+    } else if (commandName === "내일의_시간표") {
+      const timetable = await getTimetableForDate(1);
+      const embed = new EmbedBuilder()
+        .setColor("#4a90e2")
+        .setTitle("⏰ 내일의 시간표")
+        .setDescription(timetable || "시간표 정보 없음")
+        .setTimestamp()
+        .setFooter({ text: "시간표 알리미" });
+      await interaction.reply({ embeds: [embed] });
+    } else if (commandName === "어제의_시간표") {
+      const timetable = await getTimetableForDate(-1);
+      const embed = new EmbedBuilder()
+        .setColor("#4a90e2")
+        .setTitle("⏰ 어제의 시간표")
+        .setDescription(timetable || "시간표 정보 없음")
+        .setTimestamp()
+        .setFooter({ text: "시간표 알리미" });
+      await interaction.reply({ embeds: [embed] });
+    }
+  } catch (error) {
+    console.error("Error handling interaction:", error);
+    await interaction.reply({ content: "오류가 발생했습니다.", ephemeral: true });
   }
 });
 
@@ -58,9 +126,10 @@ async function sendTimetableAndLunch(channel) {
   console.log("Timetable and lunch sent successfully");
 }
 
-async function getTimetable() {
+async function getTimetableForDate(dayOffset = 0) {
   const date = new Date();
   date.setHours(date.getHours() + 9);
+  date.setDate(date.getDate() + dayOffset);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -114,9 +183,14 @@ async function getTimetable() {
   }
 }
 
-async function getLunch() {
+async function getTimetable() {
+  return await getTimetableForDate(0);
+}
+
+async function getLunchForDate(dayOffset = 0) {
   const date = new Date();
   date.setHours(date.getHours() + 9);
+  date.setDate(date.getDate() + dayOffset);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -148,6 +222,10 @@ async function getLunch() {
   }
 }
 
+async function getLunch() {
+  return await getLunchForDate(0);
+}
+
 schedule.scheduleJob("0 23 * * 0-4", async () => {
   const channel = await client.channels.fetch(TIMETABLE_CHANNEL);
   if (!channel) return console.log("⚠ Target channel not found");
@@ -155,9 +233,49 @@ schedule.scheduleJob("0 23 * * 0-4", async () => {
   await sendTimetableAndLunch(channel);
 });
 
-client.once("clientReady", () => {
+client.once("clientReady", async () => {
   console.log(`Logged in as ${client.user.tag}`);
   client.user.setActivity("승현이 맛있겠다", { type: 0 });
+
+  // 슬래시 명령어 등록
+  const commands = [
+    {
+      name: "오늘의_급식",
+      description: "오늘의 급식을 확인합니다",
+    },
+    {
+      name: "내일의_급식",
+      description: "내일의 급식을 확인합니다",
+    },
+    {
+      name: "어제의_급식",
+      description: "어제의 급식을 확인합니다",
+    },
+    {
+      name: "오늘의_시간표",
+      description: "오늘의 시간표를 확인합니다",
+    },
+    {
+      name: "내일의_시간표",
+      description: "내일의 시간표를 확인합니다",
+    },
+    {
+      name: "어제의_시간표",
+      description: "어제의 시간표를 확인합니다",
+    },
+  ];
+
+  const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+
+  try {
+    console.log("슬래시 명령어를 등록하는 중...");
+    await rest.put(Routes.applicationCommands(client.user.id), {
+      body: commands,
+    });
+    console.log("슬래시 명령어 등록 완료!");
+  } catch (error) {
+    console.error("슬래시 명령어 등록 중 오류:", error);
+  }
 });
 
 client.login(process.env.TOKEN);
