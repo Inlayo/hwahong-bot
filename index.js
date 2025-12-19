@@ -46,6 +46,9 @@ client.on("interactionCreate", async (interaction) => {
   const { commandName } = interaction;
 
   try {
+    // 먼저 defer로 응답 대기 상태로 만들기 (3초 타임아웃 방지)
+    await interaction.deferReply();
+
     if (commandName === "오늘의급식") {
       const date = new Date();
       date.setHours(date.getHours() + 9);
@@ -57,7 +60,7 @@ client.on("interactionCreate", async (interaction) => {
         .setDescription(lunch || "급식 정보 없음")
         .setTimestamp()
         .setFooter({ text: `급식 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
-      await interaction.reply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     } else if (commandName === "내일의급식") {
       const date = new Date();
       date.setHours(date.getHours() + 9);
@@ -70,7 +73,7 @@ client.on("interactionCreate", async (interaction) => {
         .setDescription(lunch || "급식 정보 없음")
         .setTimestamp()
         .setFooter({ text: `급식 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
-      await interaction.reply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     } else if (commandName === "어제의급식") {
       const date = new Date();
       date.setHours(date.getHours() + 9);
@@ -83,7 +86,7 @@ client.on("interactionCreate", async (interaction) => {
         .setDescription(lunch || "급식 정보 없음")
         .setTimestamp()
         .setFooter({ text: `급식 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
-      await interaction.reply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     } else if (commandName === "오늘의시간표") {
       const date = new Date();
       date.setHours(date.getHours() + 9);
@@ -95,7 +98,7 @@ client.on("interactionCreate", async (interaction) => {
         .setDescription(timetable || "시간표 정보 없음")
         .setTimestamp()
         .setFooter({ text: `시간표 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
-      await interaction.reply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     } else if (commandName === "내일의시간표") {
       const date = new Date();
       date.setHours(date.getHours() + 9);
@@ -108,7 +111,7 @@ client.on("interactionCreate", async (interaction) => {
         .setDescription(timetable || "시간표 정보 없음")
         .setTimestamp()
         .setFooter({ text: `시간표 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
-      await interaction.reply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     } else if (commandName === "어제의시간표") {
       const date = new Date();
       date.setHours(date.getHours() + 9);
@@ -121,11 +124,15 @@ client.on("interactionCreate", async (interaction) => {
         .setDescription(timetable || "시간표 정보 없음")
         .setTimestamp()
         .setFooter({ text: `시간표 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
-      await interaction.reply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     }
   } catch (error) {
     console.error("Error handling interaction:", error);
-    await interaction.reply({ content: "오류가 발생했습니다.", ephemeral: true });
+    if (interaction.deferred || interaction.replied) {
+      await interaction.editReply({ content: "오류가 발생했습니다." });
+    } else {
+      await interaction.reply({ content: "오류가 발생했습니다.", ephemeral: true });
+    }
   }
 });
 
@@ -154,7 +161,7 @@ async function getTimetableForDate(dayOffset = 0) {
   
   const weekday = date.getDay();
   if (weekday === 0 || weekday === 6) {
-    return "시간표 정보가 없습니다 (주말)";
+    return "시간표 정보가 없습니다 (쉬는날)";
   }
   
   const year = date.getFullYear();
@@ -203,10 +210,10 @@ async function getTimetableForDate(dayOffset = 0) {
       .join("\n");
     
     console.log(`[시간표] 결과: ${timetableData.length > 0 ? '성공' : '데이터 없음'}`);
-    return timetableData || "시간표 정보가 없습니다";
+    return timetableData || "시간표 정보가 없습니다 (쉬는날)";
   } catch (error) {
     console.error("시간표 API 오류:", error);
-    return "시간표 정보가 없습니다 (API 오류)";
+    return "시간표 정보가 없습니다 (쉬는날)";
   }
 }
 
