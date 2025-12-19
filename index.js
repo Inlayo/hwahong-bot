@@ -47,59 +47,81 @@ client.on("interactionCreate", async (interaction) => {
   const { commandName } = interaction;
 
   try {
-    if (commandName === "오늘의_급식") {
+    if (commandName === "오늘의급식") {
+      const date = new Date();
+      date.setHours(date.getHours() + 9);
+      const dayNames = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
       const lunch = await getLunchForDate(0);
       const embed = new EmbedBuilder()
         .setColor("#4a90e2")
         .setTitle("🍱 오늘의 급식")
         .setDescription(lunch || "급식 정보 없음")
         .setTimestamp()
-        .setFooter({ text: "급식 알리미" });
+        .setFooter({ text: `급식 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
       await interaction.reply({ embeds: [embed] });
-    } else if (commandName === "내일의_급식") {
+    } else if (commandName === "내일의급식") {
+      const date = new Date();
+      date.setHours(date.getHours() + 9);
+      date.setDate(date.getDate() + 1);
+      const dayNames = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
       const lunch = await getLunchForDate(1);
       const embed = new EmbedBuilder()
         .setColor("#4a90e2")
         .setTitle("🍱 내일의 급식")
         .setDescription(lunch || "급식 정보 없음")
         .setTimestamp()
-        .setFooter({ text: "급식 알리미" });
+        .setFooter({ text: `급식 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
       await interaction.reply({ embeds: [embed] });
-    } else if (commandName === "어제의_급식") {
+    } else if (commandName === "어제의급식") {
+      const date = new Date();
+      date.setHours(date.getHours() + 9);
+      date.setDate(date.getDate() - 1);
+      const dayNames = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
       const lunch = await getLunchForDate(-1);
       const embed = new EmbedBuilder()
         .setColor("#4a90e2")
         .setTitle("🍱 어제의 급식")
         .setDescription(lunch || "급식 정보 없음")
         .setTimestamp()
-        .setFooter({ text: "급식 알리미" });
+        .setFooter({ text: `급식 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
       await interaction.reply({ embeds: [embed] });
-    } else if (commandName === "오늘의_시간표") {
+    } else if (commandName === "오늘의시간표") {
+      const date = new Date();
+      date.setHours(date.getHours() + 9);
+      const dayNames = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
       const timetable = await getTimetableForDate(0);
       const embed = new EmbedBuilder()
         .setColor("#4a90e2")
         .setTitle("⏰ 오늘의 시간표")
         .setDescription(timetable || "시간표 정보 없음")
         .setTimestamp()
-        .setFooter({ text: "시간표 알리미" });
+        .setFooter({ text: `시간표 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
       await interaction.reply({ embeds: [embed] });
-    } else if (commandName === "내일의_시간표") {
+    } else if (commandName === "내일의시간표") {
+      const date = new Date();
+      date.setHours(date.getHours() + 9);
+      date.setDate(date.getDate() + 1);
+      const dayNames = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
       const timetable = await getTimetableForDate(1);
       const embed = new EmbedBuilder()
         .setColor("#4a90e2")
         .setTitle("⏰ 내일의 시간표")
         .setDescription(timetable || "시간표 정보 없음")
         .setTimestamp()
-        .setFooter({ text: "시간표 알리미" });
+        .setFooter({ text: `시간표 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
       await interaction.reply({ embeds: [embed] });
-    } else if (commandName === "어제의_시간표") {
+    } else if (commandName === "어제의시간표") {
+      const date = new Date();
+      date.setHours(date.getHours() + 9);
+      date.setDate(date.getDate() - 1);
+      const dayNames = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
       const timetable = await getTimetableForDate(-1);
       const embed = new EmbedBuilder()
         .setColor("#4a90e2")
         .setTitle("⏰ 어제의 시간표")
         .setDescription(timetable || "시간표 정보 없음")
         .setTimestamp()
-        .setFooter({ text: "시간표 알리미" });
+        .setFooter({ text: `시간표 알리미 | ${date.getMonth()+1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}` });
       await interaction.reply({ embeds: [embed] });
     }
   } catch (error) {
@@ -157,7 +179,7 @@ async function getTimetableForDate(dayOffset = 0) {
     const json = await res.json();
 
     if (!json.hisTimetable || !json.hisTimetable[1])
-      return "No timetable available";
+      return "시간표 정보가 없습니다 (쉬는날)";
 
     return json.hisTimetable[1].row
       .map((p) => {
@@ -179,7 +201,7 @@ async function getTimetableForDate(dayOffset = 0) {
       .filter(Boolean)
       .join("\n");
   } catch {
-    return "No timetable available";
+    return "시간표 정보가 없습니다 (쉬는날)";
   }
 }
 
@@ -207,7 +229,7 @@ async function getLunchForDate(dayOffset = 0) {
     const json = await res.json();
 
     if (!json.mealServiceDietInfo || !json.mealServiceDietInfo[1])
-      return "No lunch available";
+      return "급식 정보가 없습니다 (쉬는날)";
 
     let lunch = json.mealServiceDietInfo[1].row[0].DDISH_NM.replace(
       /<br\/>/g,
@@ -216,9 +238,9 @@ async function getLunchForDate(dayOffset = 0) {
     lunch = lunch.replace(/[~!@#$%^*_\-+=`{}\[\]|\\:;"'<>,.?\/]/g, "");
     lunch = lunch.replace(/\(\d+\)/g, "");
 
-    return lunch || "No lunch available";
+    return lunch || "급식 정보가 없습니다 (쉬는날)";
   } catch {
-    return "No lunch available";
+    return "급식 정보가 없습니다 (쉬는날)";
   }
 }
 
@@ -240,27 +262,27 @@ client.once("clientReady", async () => {
   // 슬래시 명령어 등록
   const commands = [
     {
-      name: "오늘의_급식",
+      name: "오늘의급식",
       description: "오늘의 급식을 확인합니다",
     },
     {
-      name: "내일의_급식",
+      name: "내일의급식",
       description: "내일의 급식을 확인합니다",
     },
     {
-      name: "어제의_급식",
+      name: "어제의급식",
       description: "어제의 급식을 확인합니다",
     },
     {
-      name: "오늘의_시간표",
+      name: "오늘의시간표",
       description: "오늘의 시간표를 확인합니다",
     },
     {
-      name: "내일의_시간표",
+      name: "내일의시간표",
       description: "내일의 시간표를 확인합니다",
     },
     {
-      name: "어제의_시간표",
+      name: "어제의시간표",
       description: "어제의 시간표를 확인합니다",
     },
   ];
