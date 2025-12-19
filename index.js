@@ -40,7 +40,6 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-// 슬래시 명령어 처리
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -152,9 +151,17 @@ async function getTimetableForDate(dayOffset = 0) {
   const date = new Date();
   date.setHours(date.getHours() + 9);
   date.setDate(date.getDate() + dayOffset);
+  
+  const weekday = date.getDay();
+  if (weekday === 0 || weekday === 6) {
+    return "시간표 정보가 없습니다 (주말)";
+  }
+  
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
+  
+  console.log(`[시간표] 조회 날짜: ${year}-${month}-${day} (요일: ${weekday})`);
 
   const url =
     `https://open.neis.go.kr/hub/hisTimetable?KEY=${process.env.NEIS_KEY}` +
@@ -178,30 +185,28 @@ async function getTimetableForDate(dayOffset = 0) {
     const res = await fetch(url);
     const json = await res.json();
 
-    if (!json.hisTimetable || !json.hisTimetable[1])
-      return "시간표 정보가 없습니다 (쉬는날)";
+    console.log(`[시간표] API 응답:`, JSON.stringify(json).substring(0, 200));
 
-    return json.hisTimetable[1].row
+    if (!json.hisTimetable || !json.hisTimetable[1]) {
+      console.log("[시간표] API 응답에 데이터 없음");
+      return "시간표 정보가 없습니다 (쉬는날)";
+    }
+
+    const timetableData = json.hisTimetable[1].row
       .map((p) => {
-        const dateObj = new Date(
-          p.ALL_TI_YMD.slice(0, 4) +
-            "-" +
-            p.ALL_TI_YMD.slice(4, 6) +
-            "-" +
-            p.ALL_TI_YMD.slice(6, 8)
-        );
-        let weekday = dateObj.getDay();
-        if (weekday === 0 || weekday === 6) return null;
         const key = `${weekday}${p.PERIO}`;
         if (seletetimeMap[key]) {
           return `${p.PERIO}교시: 선택 ${seletetimeMap[key]}`;
         }
         return `${p.PERIO}교시: ${p.ITRT_CNTNT}`;
       })
-      .filter(Boolean)
       .join("\n");
-  } catch {
-    return "시간표 정보가 없습니다 (쉬는날)";
+    
+    console.log(`[시간표] 결과: ${timetableData.length > 0 ? '성공' : '데이터 없음'}`);
+    return timetableData || "시간표 정보가 없습니다";
+  } catch (error) {
+    console.error("시간표 API 오류:", error);
+    return "시간표 정보가 없습니다 (API 오류)";
   }
 }
 
@@ -259,7 +264,6 @@ client.once("clientReady", async () => {
   console.log(`Logged in as ${client.user.tag}`);
   client.user.setActivity("승현이 맛있겠다", { type: 0 });
 
-  // 슬래시 명령어 등록
   const commands = [
     {
       name: "오늘의급식",
